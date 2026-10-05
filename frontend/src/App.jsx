@@ -2,7 +2,7 @@ import React,{useEffect,useMemo,useState} from "react";
 import {Activity,BarChart3,BookOpen,BrainCircuit,BriefcaseBusiness,ChevronRight,FileText,Gauge,GraduationCap,LayoutDashboard,Lightbulb,Menu,Search,Settings,Sparkles,Target,TrendingUp,Upload,UserRound,X,CheckCircle2,AlertTriangle,Clock3,Download} from "lucide-react";
 import {ResponsiveContainer,BarChart,Bar,XAxis,YAxis,Tooltip,CartesianGrid,PieChart,Pie,Cell} from "recharts";
 
-const API="https://skillsync-ai-eaev.onrender.com";                          
+const API="http://skillsync-ai-eaev.onrender.com";                          
 const fallback={
 job_description:"We are looking for a Data Analyst who can work with Python, SQL, Excel and Power BI. The candidate should understand data analysis, statistics and data visualization. Experience with machine learning, cloud computing and Git/GitHub is an advantage. Strong communication and problem-solving skills are required.",
 curriculum:"Programming with Python, Database Management and SQL, Statistics, Data Analysis, Web Technologies, Machine Learning fundamentals, Communication Skills, Software Engineering and practical laboratory training.",
