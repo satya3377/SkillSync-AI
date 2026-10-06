@@ -150,3 +150,107 @@ async def upload_file(file: UploadFile = File(...)):
     data = await file.read()
     text = data.decode("utf-8", errors="ignore")
     return {"filename": file.filename, "characters": len(text), "skills": skill_scores(text)}
+
+
+# ================= AUTHENTICATION =================
+
+import sqlite3
+import hashlib
+import secrets
+
+AUTH_DB = "users.db"
+
+
+def init_auth_db():
+    conn = sqlite3.connect(AUTH_DB)
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS users (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            password TEXT NOT NULL
+        )
+    """)
+    conn.commit()
+    conn.close()
+
+
+def hash_password(password):
+    return hashlib.sha256(password.encode()).hexdigest()
+
+
+init_auth_db()
+
+
+class AuthRequest(BaseModel):
+    name: str = ""
+    email: str
+    password: str
+
+
+@app.post("/api/register")
+def register(request: AuthRequest):
+    name = request.name.strip()
+    email = request.email.strip().lower()
+    password = request.password
+
+    if not email or not password:
+        return {"success": False, "message": "Email and password are required."}
+
+    conn = sqlite3.connect(AUTH_DB)
+
+    try:
+        conn.execute(
+            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
+            (name or email.split("@")[0], email, hash_password(password))
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": "Account created successfully.",
+            "user": {
+                "name": name or email.split("@")[0],
+                "email": email
+            }
+        }
+
+    except sqlite3.IntegrityError:
+        return {
+            "success": False,
+            "message": "An account with this email already exists."
+        }
+
+    finally:
+        conn.close()
+
+
+@app.post("/api/login")
+def login(request: AuthRequest):
+    email = request.email.strip().lower()
+    password = request.password
+
+    conn = sqlite3.connect(AUTH_DB)
+
+    user = conn.execute(
+        "SELECT name, email, password FROM users WHERE email = ?",
+        (email,)
+    ).fetchone()
+
+    conn.close()
+
+    if not user or user[2] != hash_password(password):
+        return {
+            "success": False,
+            "message": "Invalid email or password."
+        }
+
+    return {
+        "success": True,
+        "message": "Login successful.",
+        "token": secrets.token_urlsafe(32),
+        "user": {
+            "name": user[0],
+            "email": user[1]
+        }
+    }
